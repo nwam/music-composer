@@ -1,9 +1,11 @@
 import smidi
+import pickle
 import os
-
+import re
 DATA_DIR = 'data'
+PICKLE_DIR = os.path.join(DATA_DIR, 'pickles')
 
-def load(dirs=None):
+def generate(dirs=None, pickle_name='data'):
     '''
     Loads smidis of dirs
 
@@ -12,7 +14,29 @@ def load(dirs=None):
             None uses all of the directories
     '''
     data = []
+    files = get_files(dirs)
+    midi_file = re.compile('.*\.mid$')
 
+    for filename in files:
+        try:
+            if midi_file.fullmatch(filename) is not None:
+                data.append(smidi.midi2smidi(filename))
+        except:
+            continue
+
+    x = [d[:-1] for d in data]
+    y = [d[1:] for d in data]
+
+    pickle_file = pickle_filename(pickle_name)
+    pickle.dump((x,y), open(pickle_file, 'wb'))
+
+
+def load(pickle_name='data'):
+    pickle_file = pickle_filename(pickle_name)
+    return pickle.load(open(pickle_file, 'rb'))
+
+
+def get_files(dirs=None):
     if dirs is not None:
         dirs = [os.path.join(DATA_DIR, dir) for dir in dirs]
 
@@ -22,10 +46,7 @@ def load(dirs=None):
 
         for file in files:
             filename = os.path.join(root, file)
+            yield filename
 
-            try:
-                data.append(smidi.midi2smidi(filename))
-            except:
-                continue
-
-    return data
+def pickle_filename(pickle_name):
+    return '{}.pickle'.format(os.path.join(PICKLE_DIR, pickle_name))
