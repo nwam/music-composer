@@ -2,6 +2,8 @@ import sys
 import numpy as np
 from keras.models import load_model
 import smidi
+from hyperps import n_notes, L
+import pdb
 
 if __name__ == '__main__':
 
@@ -17,15 +19,14 @@ if __name__ == '__main__':
         print('Failed to load model')
         exit()
 
-    song = np.zeros(( song_size, smidi.NUM_MIDI_PITCHES ))
-    L = 256
-    x = np.random.rand( 1, L, smidi.NUM_MIDI_PITCHES )*2-1
+    song = np.zeros(( song_size, n_notes))
+    x = np.random.rand( 1, L, n_notes )*2-1
 
     for i in range(song_size):
-        y = model.predict(x)
-        song[i] = y[0, -1].reshape(( smidi.NUM_MIDI_PITCHES, ))
+        y = model.predict(x).reshape(( smidi.NUM_MIDI_PITCHES, ))
+        song[i] = y
         x = np.roll(x, -1, axis=1)
-        x = y
+        x[0,-1] = y
     
     # TODO: generate midi instead of plotting
     import matplotlib.pyplot as plt
