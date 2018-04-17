@@ -19,7 +19,7 @@ if __name__ == '__main__':
     model_name = '{}.h5'.format(sys.argv[1])
 
     print('Loading dataset')
-    x, y = dataset.load('banjo')
+    x = dataset.load('banjo')
 
     n_notes = smidi.NUM_MIDI_PITCHES
 
@@ -35,10 +35,22 @@ if __name__ == '__main__':
     model.compile(optimizer='adam',
                   loss='mse')
 
-    print('Training model')
-    model.fit(np.array([x[0]]), np.array([y[0]]),
-              batch_size=32,
-              epochs=30)
+    print('Preparing data')
+    x = x[0] # just using one song for now
+    L = 256 # Length of mini-batches
+    N = len(x) - 1 - L # Number of mini batches
+    xx = np.zeros(( N, L, smidi.NUM_MIDI_PITCHES ))
+    yy = np.zeros(( N, L, smidi.NUM_MIDI_PITCHES ))
+    for i in range(N):
+        xx[i] = x[i:i+L]
+        yy[i] = x[i+1:i+1+L]
 
-    print('Saving model')
-    model.save(os.path.join(MODEL_DIR, model_name))
+    print('Training model')
+    model.fit(xx, yy,
+              batch_size=32,
+              epochs=10,
+              shuffle=True)
+
+    model_path = os.path.join(MODEL_DIR, model_name)
+    print('Saving model to {}'.format(model_path))
+    model.save(model_path)

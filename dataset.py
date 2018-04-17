@@ -24,11 +24,8 @@ def generate(dirs=None, pickle_name='data'):
         except:
             continue
 
-    x = [d[:-1] for d in data]
-    y = [d[1:] for d in data]
-
     pickle_file = pickle_filename(pickle_name)
-    pickle.dump((x,y), open(pickle_file, 'wb'))
+    pickle.dump(data, open(pickle_file, 'wb'))
 
 
 def load(pickle_name='data'):
