@@ -7,7 +7,7 @@ import numpy as np
 
 from keras.layers import LSTM, Dense, Activation
 from keras.models import Sequential
-from keras.optimizers import RMSprop
+from keras import optimizers
 
 MODEL_DIR = 'saved_models'
 
@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
 
     print('Compiling model')
-    optimizer = RMSprop(lr=0.001)
+    optimizer = optimizers.Adam()
     model.compile(optimizer=optimizer,
                   loss='mse')
 

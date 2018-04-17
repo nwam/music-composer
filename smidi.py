@@ -43,7 +43,7 @@ def midi2smidi(filename, resolution=32):
             beat_s = int(np.round(time2beat(note.start)))
             beat_e = int(np.round(time2beat(note.end)))
 
-            roll[beat_s][note.pitch] = note.velocity/MAX_MIDI_VELOCITY
+            roll[beat_s][note.pitch] = 1 #note.velocity/MAX_MIDI_VELOCITY
             roll[beat_e][note.pitch] = -1
 
     return roll
