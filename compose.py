@@ -18,12 +18,13 @@ if __name__ == '__main__':
         exit()
 
     song = np.zeros(( song_size, smidi.NUM_MIDI_PITCHES ))
-    x = np.zeros(( 1, 1, smidi.NUM_MIDI_PITCHES ))
-
+    L = 256
+    x = np.random.rand( 1, L, smidi.NUM_MIDI_PITCHES )*2-1
 
     for i in range(song_size):
         y = model.predict(x)
-        song[i] = y.reshape(( smidi.NUM_MIDI_PITCHES, ))
+        song[i] = y[0, -1].reshape(( smidi.NUM_MIDI_PITCHES, ))
+        x = np.roll(x, -1, axis=1)
         x = y
     
     # TODO: generate midi instead of plotting

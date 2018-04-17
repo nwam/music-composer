@@ -7,6 +7,7 @@ import numpy as np
 
 from keras.layers import LSTM, Dense, Activation
 from keras.models import Sequential
+from keras.optimizers import RMSprop
 
 MODEL_DIR = 'saved_models'
 
@@ -31,8 +32,10 @@ if __name__ == '__main__':
                    return_sequences=True))
     model.add(Dense(n_notes, activation='tanh'))
 
+
     print('Compiling model')
-    model.compile(optimizer='adam',
+    optimizer = RMSprop(lr=0.001)
+    model.compile(optimizer=optimizer,
                   loss='mse')
 
     print('Preparing data')
