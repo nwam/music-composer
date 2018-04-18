@@ -21,7 +21,11 @@ def generate(dirs=None, pickle_name='data'):
         try:
             if midi_file.fullmatch(filename) is not None:
                 data.append(smidi.midi2smidi(filename))
-        except:
+        except smidi.TimeSignatureException:
+            print('Warning: failed to add {} because of time signature'.format(filename))
+            continue
+        except Exception:
+            print('Warning: failed to add {} for unknown reasons'.format(filename))
             continue
 
     pickle_file = pickle_filename(pickle_name)

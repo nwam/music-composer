@@ -17,15 +17,22 @@ class OParams(Enum):
     HOLD = 0
     PRESS = 1
 
-def midi2smidi(filename, resolution=16):
+def midi2smidi(filename, resolution=16, time_sig=4):
     '''
     Input:
         filename is the location of a midi file to parse
         resolution is the smallest beat step (default is 16th notes)
     '''
-
+    
     # Load midi
     pm = pretty_midi.PrettyMIDI(filename)
+
+    # Check time signature
+    if time_sig is not None:
+        sigs = pm.time_signature_changes
+        for sig in sigs:
+            if sig.numerator % time_sig != 0:
+                raise TimeSignatureException('Time signature ({}/{}) on file {}'.format(sig.numberator, sig.denominator, filename))
 
     # Get timings of <resolution> beats (ie 32nd-note beats)
     beats4 = pm.get_beats()
@@ -58,3 +65,5 @@ def midi2smidi(filename, resolution=16):
 
     return roll
 
+class TimeSignatureException(Exception):
+    pass
