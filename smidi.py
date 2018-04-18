@@ -7,16 +7,21 @@ smidi - simple midi
 import pretty_midi
 import numpy as np
 from scipy.interpolate import interp1d
+from enum import Enum
 
 FILE_NAME = 'data/mario/Super Mario World 2 Yoshis Island - Story Music Box.mid'
 NUM_MIDI_PITCHES  = 128
 MAX_MIDI_VELOCITY = 127
 
-def midi2smidi(filename, resolution=32):
+class OParams(Enum):
+    HOLD = 0
+    PRESS = 1
+
+def midi2smidi(filename, resolution=16):
     '''
     Input:
         filename is the location of a midi file to parse
-        resolution is the smallest beat step (default is 32nd notes)
+        resolution is the smallest beat step (default is 16th notes)
     '''
 
     # Load midi
@@ -31,7 +36,7 @@ def midi2smidi(filename, resolution=32):
     beats = np.append(beats, beats4[-1]) # last beat gets cut out in interp
 
     # Create a low resolution piano roll
-    roll = np.zeros(( len(beats), NUM_MIDI_PITCHES ))
+    roll = np.zeros(( len(beats), NUM_MIDI_PITCHES, len(OParams) ))
     # Function to convert times to beat number
     time2beat = interp1d(beats, np.arange(len(beats)))
 
@@ -43,7 +48,13 @@ def midi2smidi(filename, resolution=32):
             beat_s = int(np.round(time2beat(note.start)))
             beat_e = int(np.round(time2beat(note.end)))
 
-            roll[beat_s][note.pitch] = 1 #note.velocity/MAX_MIDI_VELOCITY
-            roll[beat_e][note.pitch] = -1
+            roll[beat_s][note.pitch][OParams.PRESS.value] = 1
+            for beat in range(beat_s, beat_e+1):
+                roll[beat][note.pitch][OParams.HOLD.value] = 1 #note.velocity/MAX_MIDI_VELOCIY
+
+    # Reshape roll so that LSTM likes it
+    s = roll.shape
+    roll = roll.reshape(s[0], s[1]*s[2]) 
 
     return roll
+
