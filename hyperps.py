@@ -1,6 +1,6 @@
 import smidi
 
-L = 128 # 16th notes = 8 measures
+L = 64 # 16th notes
 
 n_notes = smidi.NUM_MIDI_PITCHES
 note_out_dims = len(smidi.OParams)

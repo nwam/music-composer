@@ -1,3 +1,5 @@
+import pdb
+
 import dataset
 import smidi
 from hyperps import n_features, L
@@ -5,11 +7,12 @@ from hyperps import n_features, L
 import sys
 import os
 import numpy as np
+import time
 
 from keras.layers import LSTM, Dense, Activation
 from keras.models import Sequential
 from keras import optimizers
-import keras.backend as K
+from keras.callbacks import TensorBoard, ModelCheckpoint
 
 MODEL_DIR = 'saved_models'
 
@@ -34,8 +37,7 @@ def main():
 
     print('Building model')
     model = Sequential()
-    model.add(LSTM(64, input_shape=(x.shape[1:]), 
-                   activation='sigmoid',
+    model.add(LSTM(256, input_shape=(x.shape[1:]), 
                    dropout=0.2, 
                    recurrent_dropout=0.2))
     model.add(Dense(y.shape[1], activation='sigmoid'))
@@ -43,46 +45,24 @@ def main():
     print('Compiling model')
     optimizer = optimizers.Adam()
     model.compile(optimizer=optimizer,
-                  loss='mse')
+                  loss='binary_crossentropy')
+
+    print('Init callbacks')
+    tensorboard = TensorBoard(log_dir="logs/{}".format(time.time()))
+    check_file = 'checkpoints/weights.{epoch:02d}-{loss:.2f}.h5'
+    checkpoint = ModelCheckpoint(check_file, monitor='loss', save_best_only=True, mode='min')
+
 
     print('Training model')
     model.fit(x, y,
               batch_size=32,
-              epochs=10,
-              shuffle=True)
+              epochs=30,
+              shuffle=True,
+              callbacks=[tensorboard, checkpoint])
 
     model_path = os.path.join(MODEL_DIR, model_name)
     print('Saving model to {}'.format(model_path))
     model.save(model_path)
-    
-
-def nooff_loss(t, y):
-    '''
-    Loss function for smidi model with no note offset.
-    Representation is simply a positive value for onsets,
-    where the value denotes the time until the offset ie
-    1 is a whole note, 0.25 is a quarter note, etc.
-
-    It seems like we cannot create a differentiable loss
-    function for this model
-    '''
-    # If a note is held for too short, it isn't played
-    short = 1/64
-    y = K.clip(y-short, 0, 1-K.epsilon())
-
-    # Loss for missed notes
-    false_positives = K.cast(K.greater(y-t,0), 'float32')
-    fn_loss = K.sum(false_positives)
-    
-    # Loss for extra notes
-    #false_negatives = t>0 and y==0
-    #fp_loss = K.sum(1*false_positives)
-
-    # Loss for note hold time
-    #true_positives = t>0 and y>0
-    #tp_loss = K.sum(true_positives*K.abs(K.log(t)-K.log(y)))
-
-    return fn_loss #+ fp_loss + 0.1*tp_loss
 
 if __name__ == '__main__':
     main()
