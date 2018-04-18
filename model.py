@@ -8,13 +8,16 @@ import sys
 import os
 import numpy as np
 import time
+import math
+import logging
 
-from keras.layers import LSTM, Dense, Activation
+from keras.layers import LSTM, Dense, Activation, Conv1D
 from keras.models import Sequential
 from keras import optimizers
 from keras.callbacks import TensorBoard, ModelCheckpoint
 
 MODEL_DIR = 'saved_models'
+logging.basicConfig(filename='log.log', level=logging.DEBUG)
 
 def main():
     if len(sys.argv) < 2:
@@ -29,7 +32,9 @@ def main():
 
     print('Building model')
     model = Sequential()
-    model.add(LSTM(256, input_shape=(L, n_features_in), 
+    model.add(Conv1D(32, 25, input_shape=(L, n_features_in),
+                     activation='sigmoid'))
+    model.add(LSTM(256, #input_shape=(L, n_features_in), 
                    dropout=0.2, 
                    recurrent_dropout=0.2))
     model.add(Dense(n_features_out, activation='sigmoid'))
@@ -44,19 +49,27 @@ def main():
     #check_file = 'checkpoints/weights.{epoch:02d}-{loss:.2f}.h5'
     #checkpoint = ModelCheckpoint(check_file, monitor='loss', save_best_only=True, mode='min')
     check_file = 'checkpoints/e{:02d}.h5'
-    batch_check_file = 'checkpoints/e{:02d}-b{}.h5'
+    batch_check_file = 'checkpoints/e{:02d}-b{}-loss{}.h5'
 
     print('Training model')
     epochs = 50
     batch_size = 32
     batches = dataset.shuffled_batches(data, L, batch_size)
+    min_loss = math.inf
+
     for epoch in range(epochs):
         for i, (x,y) in enumerate(batches):
-            model.train_on_batch(x, y)
+
             if i%50 == 0:
-                print('Trained on batch {}, loss is {}'.format(i, model.evaluate(x,y,batch_size=batch_size, verbose=0)))
-            if i%500 == 0:
-                model.save(batch_check_file.format(epoch, i))
+                loss = model.evaluate(x,y,batch_size=batch_size, verbose=0)
+                logging.info('Trained on batch {}, loss is {}'.format(i, loss))
+                print('Trained on batch {}, loss is {}'.format(i, loss))
+                if loss < min_loss: 
+                    model.save(batch_check_file.format(epoch, i, min_loss))
+
+            model.train_on_batch(x, y)
+
+
         model.save(check_file.format(epoch))
 
     model_path = os.path.join(MODEL_DIR, model_name)
