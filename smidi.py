@@ -17,6 +17,12 @@ class OParams(Enum):
     HOLD = 0
     PRESS = 1
 
+class IParams(Enum):
+    BEAT0 = 0
+    BEAT1 = 1
+    BEAT2 = 2
+    BEAT3 = 3
+
 def midi2smidi(filename, resolution=16, time_sig=4):
     '''
     Input:
@@ -63,7 +69,15 @@ def midi2smidi(filename, resolution=16, time_sig=4):
     s = roll.shape
     roll = roll.reshape(s[0], s[1]*s[2]) 
 
-    return roll
+    # Get ids for each beat (only works for 4/4 time)
+    downbeat0 = time2beat(pm.get_downbeats()[0])
+    beats_per_measure = 4
+    beat_array = np.zeros(( len(beats), beats_per_measure ))
+    for i in range(beats_per_measure):
+        beat_array[:, i] = np.arange(downbeat0, downbeat0+len(beats))//(2**i)%2
+
+    data = np.concatenate((roll, beat_array), axis=1)
+    return data
 
 class TimeSignatureException(Exception):
     pass

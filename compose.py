@@ -2,7 +2,7 @@ import sys
 import numpy as np
 from keras.models import load_model
 import smidi
-from hyperps import n_features, L
+from hyperps import n_features_in, n_features_out, L
 import pdb
 
 if __name__ == '__main__':
@@ -19,7 +19,7 @@ if __name__ == '__main__':
         print('Failed to load model')
         exit()
 
-    song = np.zeros(( song_size, n_features))
+    song = np.zeros(( song_size, n_features_out))
     songp = np.zeros_like(song)
 
     # Lets try a non-random inital seed
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     x = data[4]
     x = x[:L]
     x = np.expand_dims(x, 0)
-    #x = np.random.rand( 1, L, n_features )*2-1
+    #x = np.random.rand( 1, L, n_features_in)*2-1
 
     for i in range(song_size):
         yp = model.predict(x)

@@ -2,7 +2,7 @@ import pdb
 
 import dataset
 import smidi
-from hyperps import n_features, L
+from hyperps import n_features_out, n_features_in, L
 
 import sys
 import os
@@ -24,23 +24,15 @@ def main():
     model_name = '{}.h5'.format(sys.argv[1])
 
     print('Loading dataset')
-    data = dataset.load('banjo_multi')
-
-    print('Preparing data')
-    data = data[4] # just using one song for now
-    N = len(data) - 1 - L # Number of sequences
-    x = np.zeros(( N, L, n_features ))
-    y = np.zeros(( N, n_features ))
-    for i in range(N):
-        x[i] = data[i:i+L]
-        y[i] = data[i+L]
+    data = dataset.load('banjo')
+    song = data
 
     print('Building model')
     model = Sequential()
-    model.add(LSTM(256, input_shape=(x.shape[1:]), 
+    model.add(LSTM(256, input_shape=(L, n_features_in), 
                    dropout=0.2, 
                    recurrent_dropout=0.2))
-    model.add(Dense(y.shape[1], activation='sigmoid'))
+    model.add(Dense(n_features_out, activation='sigmoid'))
 
     print('Compiling model')
     optimizer = optimizers.Adam()
@@ -48,17 +40,24 @@ def main():
                   loss='binary_crossentropy')
 
     print('Init callbacks')
-    tensorboard = TensorBoard(log_dir="logs/{}".format(time.time()))
-    check_file = 'checkpoints/weights.{epoch:02d}-{loss:.2f}.h5'
-    checkpoint = ModelCheckpoint(check_file, monitor='loss', save_best_only=True, mode='min')
-
+    #tensorboard = TensorBoard(log_dir="logs/{}".format(time.time()))
+    #check_file = 'checkpoints/weights.{epoch:02d}-{loss:.2f}.h5'
+    #checkpoint = ModelCheckpoint(check_file, monitor='loss', save_best_only=True, mode='min')
+    check_file = 'checkpoints/e{:02d}.h5'
+    batch_check_file = 'checkpoints/e{:02d}-b{}.h5'
 
     print('Training model')
-    model.fit(x, y,
-              batch_size=32,
-              epochs=30,
-              shuffle=True,
-              callbacks=[tensorboard, checkpoint])
+    epochs = 50
+    batch_size = 32
+    batches = dataset.shuffled_batches(data, L, batch_size)
+    for epoch in range(epochs):
+        for i, (x,y) in enumerate(batches):
+            model.train_on_batch(x, y)
+            if i%50 == 0:
+                print('Trained on batch {}, loss is {}'.format(i, model.evaluate(x,y,batch_size=batch_size, verbose=0)))
+            if i%500 == 0:
+                model.save(batch_check_file.format(epoch, i))
+        model.save(check_file.format(epoch))
 
     model_path = os.path.join(MODEL_DIR, model_name)
     print('Saving model to {}'.format(model_path))
