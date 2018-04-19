@@ -25,6 +25,10 @@ def main():
         print('Usage: python {} <model_name>'.format(sys.argv[0]))
         exit()
     model_name = '{}.h5'.format(sys.argv[1])
+    weights_file = None
+
+    if len(sys.argv) > 2:
+        weights_file = sys.argv[2]
 
     print('Loading dataset')
     data = dataset.load('banjo')
@@ -32,17 +36,24 @@ def main():
 
     print('Building model')
     model = Sequential()
-    model.add(Conv1D(32, 25, input_shape=(L, n_features_in),
-                     activation='sigmoid'))
-    model.add(LSTM(256, #input_shape=(L, n_features_in), 
+#    model.add(Conv1D(32, 25, input_shape=(L, n_features_in),
+#                     activation='sigmoid'))
+#    model.add(Conv1D(32, 25,
+#                     activation='sigmoid'))
+    model.add(LSTM(256, input_shape=(L, n_features_in), 
                    dropout=0.2, 
-                   recurrent_dropout=0.2))
-    model.add(Dense(n_features_out, activation='sigmoid'))
+                   recurrent_dropout=0.2,
+                   activation = 'tanh'))
+    model.add(Dense(n_features_out, activation='relu'))
+    
+    if weights_file is not None:
+        print('Loading weights')
+        model.load_weights(weights_file)
 
     print('Compiling model')
-    optimizer = optimizers.Adam()
+    optimizer = optimizers.Adam(lr=0.001)
     model.compile(optimizer=optimizer,
-                  loss='binary_crossentropy')
+                  loss='mse')
 
     print('Init callbacks')
     #tensorboard = TensorBoard(log_dir="logs/{}".format(time.time()))
@@ -52,22 +63,23 @@ def main():
     batch_check_file = 'checkpoints/e{:02d}-b{}-loss{}.h5'
 
     print('Training model')
-    epochs = 50
+    epochs = 20
     batch_size = 32
-    batches = dataset.shuffled_batches(data, L, batch_size)
     min_loss = math.inf
 
     for epoch in range(epochs):
+        batches = dataset.shuffled_batches(data, L, batch_size)
         for i, (x,y) in enumerate(batches):
+
+            model.train_on_batch(x, y)
 
             if i%50 == 0:
                 loss = model.evaluate(x,y,batch_size=batch_size, verbose=0)
-                logging.info('Trained on batch {}, loss is {}'.format(i, loss))
-                print('Trained on batch {}, loss is {}'.format(i, loss))
+                logging.info('Trained on batch {}-{}, loss is {}'.format(epoch, i, loss))
+                print('Trained on batch {}-{}, loss is {}'.format(epoch, i, loss))
                 if loss < min_loss: 
+                    min_loss = loss
                     model.save(batch_check_file.format(epoch, i, min_loss))
-
-            model.train_on_batch(x, y)
 
 
         model.save(check_file.format(epoch))

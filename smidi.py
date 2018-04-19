@@ -10,7 +10,10 @@ from scipy.interpolate import interp1d
 from enum import Enum
 
 FILE_NAME = 'data/mario/Super Mario World 2 Yoshis Island - Story Music Box.mid'
+PITCH_CLIP_LOW = 22
+PITCH_CLIP_HIGH = 18
 NUM_MIDI_PITCHES  = 128
+NUM_PITCHES = NUM_MIDI_PITCHES - PITCH_CLIP_LOW - PITCH_CLIP_HIGH
 MAX_MIDI_VELOCITY = 127
 
 class OParams(Enum):
@@ -49,7 +52,7 @@ def midi2smidi(filename, resolution=16, time_sig=4):
     beats = np.append(beats, beats4[-1]) # last beat gets cut out in interp
 
     # Create a low resolution piano roll
-    roll = np.zeros(( len(beats), NUM_MIDI_PITCHES, len(OParams) ))
+    roll = np.zeros(( len(beats), NUM_PITCHES, len(OParams) ))
     # Function to convert times to beat number
     time2beat = interp1d(beats, np.arange(len(beats)))
 
@@ -58,12 +61,15 @@ def midi2smidi(filename, resolution=16, time_sig=4):
         if instrument.is_drum:
             continue
         for note in instrument.notes:
+            if note.pitch < PITCH_CLIP_LOW or note.pitch >= PITCH_CLIP_HIGH:
+                continue
+            pitch = note.pitch - PITCH_CLIP_LOW
             beat_s = int(np.round(time2beat(note.start)))
             beat_e = int(np.round(time2beat(note.end)))
 
-            roll[beat_s][note.pitch][OParams.PRESS.value] = 1
+            roll[beat_s][pitch][OParams.PRESS.value] = 1
             for beat in range(beat_s, beat_e+1):
-                roll[beat][note.pitch][OParams.HOLD.value] = 1 #note.velocity/MAX_MIDI_VELOCIY
+                roll[beat][pitch][OParams.HOLD.value] = 1 #note.velocity/MAX_MIDI_VELOCIY
 
     # Reshape roll so that LSTM likes it
     s = roll.shape
@@ -78,6 +84,14 @@ def midi2smidi(filename, resolution=16, time_sig=4):
 
     data = np.concatenate((roll, beat_array), axis=1)
     return data
+
+def next_beat_array(ba):
+    ba = ba.copy()
+    for i in range(len(ba)):
+        ba[i] = (ba[i]+1)%2
+        if ba[i] == 1:
+            break
+    return ba
 
 class TimeSignatureException(Exception):
     pass

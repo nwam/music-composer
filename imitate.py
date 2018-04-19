@@ -2,7 +2,7 @@ import sys
 import numpy as np
 from keras.models import load_model
 import smidi
-from hyperps import n_features, L
+from hyperps import n_features_in, n_features_out, L
 import dataset
 
 if __name__ == '__main__':
@@ -19,10 +19,10 @@ if __name__ == '__main__':
         print('Failed to load model')
         exit()
 
-    data = dataset.load('banjo_multi')
-    x = data[4]
+    data = dataset.load('banjo')
+    x = data[40000:44000]
 
-    song = np.zeros(( song_size, n_features))
+    song = np.zeros(( song_size, n_features_out))
 
     for i in range(song_size):
         y = model.predict(np.expand_dims(x[i:i+L],0))
