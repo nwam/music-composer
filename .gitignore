@@ -1,6 +1,8 @@
 data/*
 *.swp
-__pycache__*
 logs/*
 checkpoints/*
-log.log*
+log.log
+
+__pycache__*
+*.pyc

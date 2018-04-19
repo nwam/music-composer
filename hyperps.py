@@ -2,7 +2,7 @@ import smidi
 
 L = 128 # 16th notes
 
-n_notes = smidi.NUM_MIDI_PITCHES
+n_notes = smidi.NUM_PITCHES
 note_out_dims = len(smidi.OParams)
 note_in_dims = len(smidi.IParams)
 

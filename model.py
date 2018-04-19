@@ -31,7 +31,7 @@ def main():
         weights_file = sys.argv[2]
 
     print('Loading dataset')
-    data = dataset.load('banjo')
+    data = dataset.load('banjo_small')
     song = data
 
     print('Building model')

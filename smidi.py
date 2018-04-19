@@ -1,4 +1,4 @@
-''' 
+'''
 smidi - simple midi
     notes are snapped to beats based on midi's tempo
     and songs are represented in single arrays
@@ -61,7 +61,7 @@ def midi2smidi(filename, resolution=16, time_sig=4):
         if instrument.is_drum:
             continue
         for note in instrument.notes:
-            if note.pitch < PITCH_CLIP_LOW or note.pitch >= PITCH_CLIP_HIGH:
+            if note.pitch < PITCH_CLIP_LOW or note.pitch >= NUM_MIDI_PITCHES-PITCH_CLIP_HIGH:
                 continue
             pitch = note.pitch - PITCH_CLIP_LOW
             beat_s = int(np.round(time2beat(note.start)))
