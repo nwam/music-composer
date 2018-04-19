@@ -1,3 +1,4 @@
+import pretty_midi
 import smidi
 import pickle
 import os
@@ -7,23 +8,54 @@ from hyperps import n_features_in, n_features_out
 
 DATA_DIR = 'data'
 PICKLE_DIR = os.path.join(DATA_DIR, 'pickles')
+DUMP_SIZE = 600
 
-def generate(dirs=None, pickle_name='data'):
+def generate(dirs=None, pickle_name='data', accepted_keys=None):
     '''
     Loads smidis of dirs
 
     Input:
         dirs is a list of the directories in data/ to use 
             None uses all of the directories
+        pickle_name is the name of the file which to save the generated data
+        accepted_keys are the pretty_midi.KeySignature values to accept
+            seeting accepted_keys will transpose every song to C maj/ A min
     '''
     data = np.zeros((0, n_features_in))
     files = get_files(dirs)
     midi_file = re.compile('.*\.mid$')
 
     for filename in files:
+        if midi_file.fullmatch(filename) is None:
+            continue
+
         try:
-            if midi_file.fullmatch(filename) is not None:
-                    data = np.concatenate((data, smidi.midi2smidi(filename)))
+            pm = pretty_midi.PrettyMIDI(filename)
+        except:
+            continue
+
+        if accepted_keys is not None:
+            keys = pm.key_signature_changes
+            
+            # Check key
+            if len(keys) == 0 or len(keys) > 1 or keys[0].key_number not in accepted_keys:
+                continue
+
+            # Transpose
+            key = keys[0].key_number
+            if key >= 12: # minor
+                key = (key+3)%12 # convert to major
+            transpose = get_transpose(key)
+
+            for instrument in pm.instruments:
+                if instrument.is_drum:
+                    continue
+                for note in instrument.notes:
+                    note.pitch += transpose
+
+        try:
+            data = np.concatenate((data, smidi.midi2smidi(pm)))
+
         except smidi.TimeSignatureException:
             print('Warning: failed to add {} because of time signature'.format(filename))
             continue
@@ -94,6 +126,13 @@ def get_files(dirs=None):
         for file in files:
             filename = os.path.join(root, file)
             yield filename
+
+def get_transpose(key):
+    transpose = key%6
+    transpose *= -1
+    if key >= 6:
+        transpose = 6+transpose
+    return key
 
 def pickle_filename(pickle_name):
     return '{}.pickle'.format(os.path.join(PICKLE_DIR, pickle_name))

@@ -46,6 +46,10 @@ if __name__ == '__main__':
     # TODO: generate midi instead of plotting
     import matplotlib.pyplot as plt
     plt.imshow(songp)
+    plt.xlabel('Note')
+    plt.ylabel('Time (16th note)')
     plt.show()
     plt.imshow(song)
+    plt.xlabel('Note')
+    plt.ylabel('Time (16th note)')
     plt.show()

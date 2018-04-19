@@ -18,13 +18,11 @@ from keras.callbacks import TensorBoard, ModelCheckpoint
 
 def create_model(model_name, dataset_name='banjo', weights_file=None):
 
-    MODEL_DIR = 'saved_models'
     logging.basicConfig(filename='log.log', level=logging.DEBUG)
 
-    model_name = '{}.h5'.format(model_name)
+    MODEL_DIR = 'saved_models'
 
-    if len(sys.argv) > 2:
-        weights_file = sys.argv[2]
+    model_name = '{}.h5'.format(model_name)
 
     print('Loading dataset')
     data = dataset.load(dataset_name)
@@ -40,7 +38,7 @@ def create_model(model_name, dataset_name='banjo', weights_file=None):
                    dropout=0.2, 
                    recurrent_dropout=0.2,
                    activation = 'tanh'))
-    model.add(Dense(n_features_out, activation='relu'))
+    model.add(Dense(n_features_out, activation='softmax'))
     
     if weights_file is not None:
         print('Loading weights')
@@ -87,7 +85,16 @@ def create_model(model_name, dataset_name='banjo', weights_file=None):
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print('ERROR: Please supply a model name to the program')
-        print('Usage: python {} <model_name>'.format(sys.argv[0]))
+        print('Usage: python {} <model_name> <dataset_name> <weights_file>'.format(sys.argv[0]))
         exit()
 
-    create_model(sys.argv[1])
+    dataset_name = None
+    if len(sys.argv) > 2:
+        dataset_name = sys.argv[2]
+
+    weights_file = None
+    if len(sys.argv) > 3:
+        weights_file = sys.argv[3]
+
+
+    create_model(sys.argv[1], dataset_name, weights_file=weights_file)

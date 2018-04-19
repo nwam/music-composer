@@ -26,16 +26,13 @@ class IParams(Enum):
     BEAT2 = 2
     BEAT3 = 3
 
-def midi2smidi(filename, resolution=16, time_sig=4):
+def midi2smidi(pm, resolution=16, time_sig=4):
     '''
     Input:
+        pm is a pretty_midi.PrettyMIDI object of the song
         filename is the location of a midi file to parse
         resolution is the smallest beat step (default is 16th notes)
     '''
-    
-    # Load midi
-    pm = pretty_midi.PrettyMIDI(filename)
-
     # Check time signature
     if time_sig is not None:
         sigs = pm.time_signature_changes
@@ -89,6 +86,12 @@ def smidi2midi(smidi):
     '''
     Converts an array of note presses and holds to a midi file
     '''
+    pm = pretty_midi.PrettyMIDI(initial_tempo=120)
+
+    piano = pretty_midi.Instrument(program=1, is_drum=False, name='shredding device')
+    pm.instruments.append(piano)
+
+
     
 
 def next_beat_array(ba):
@@ -100,4 +103,7 @@ def next_beat_array(ba):
     return ba
 
 class TimeSignatureException(Exception):
+    pass
+
+class KeySignatureException(Exception):
     pass
