@@ -16,22 +16,18 @@ from keras.models import Sequential
 from keras import optimizers
 from keras.callbacks import TensorBoard, ModelCheckpoint
 
-MODEL_DIR = 'saved_models'
-logging.basicConfig(filename='log.log', level=logging.DEBUG)
+def create_model(model_name, dataset_name='banjo', weights_file=None):
 
-def main():
-    if len(sys.argv) < 2:
-        print('ERROR: Please supply a model name to the program')
-        print('Usage: python {} <model_name>'.format(sys.argv[0]))
-        exit()
-    model_name = '{}.h5'.format(sys.argv[1])
-    weights_file = None
+    MODEL_DIR = 'saved_models'
+    logging.basicConfig(filename='log.log', level=logging.DEBUG)
+
+    model_name = '{}.h5'.format(model_name)
 
     if len(sys.argv) > 2:
         weights_file = sys.argv[2]
 
     print('Loading dataset')
-    data = dataset.load('banjo_small')
+    data = dataset.load(dataset_name)
     song = data
 
     print('Building model')
@@ -53,7 +49,7 @@ def main():
     print('Compiling model')
     optimizer = optimizers.Adam(lr=0.001)
     model.compile(optimizer=optimizer,
-                  loss='mse')
+                  loss='categorical_crossentropy')
 
     print('Init callbacks')
     #tensorboard = TensorBoard(log_dir="logs/{}".format(time.time()))
@@ -89,4 +85,9 @@ def main():
     model.save(model_path)
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) < 2:
+        print('ERROR: Please supply a model name to the program')
+        print('Usage: python {} <model_name>'.format(sys.argv[0]))
+        exit()
+
+    create_model(sys.argv[1])

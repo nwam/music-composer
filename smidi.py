@@ -85,6 +85,12 @@ def midi2smidi(filename, resolution=16, time_sig=4):
     data = np.concatenate((roll, beat_array), axis=1)
     return data
 
+def smidi2midi(smidi):
+    '''
+    Converts an array of note presses and holds to a midi file
+    '''
+    
+
 def next_beat_array(ba):
     ba = ba.copy()
     for i in range(len(ba)):

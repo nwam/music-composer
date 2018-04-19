@@ -2,7 +2,6 @@ import sys
 import numpy as np
 from keras.models import load_model
 import smidi
-from hyperps import n_features_in, n_features_out, L
 import pdb
 
 if __name__ == '__main__':
@@ -18,6 +17,10 @@ if __name__ == '__main__':
     except:
         print('Failed to load model')
         exit()
+
+    L              = model.get_layer(index= 0).get_config()['batch_input_shape'][1]
+    n_features_in  = model.get_layer(index= 0).get_config()['batch_input_shape'][2]
+    n_features_out = model.get_layer(index=-1).get_config()['units']
 
     song = np.zeros(( song_size, n_features_out))
     songp = np.zeros_like(song)
