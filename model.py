@@ -34,10 +34,11 @@ def create_model(model_name, dataset_name='banjo', weights_file=None):
 #                     activation='sigmoid'))
 #    model.add(Conv1D(32, 25,
 #                     activation='sigmoid'))
-    model.add(LSTM(256, input_shape=(L, n_features_in), 
+    model.add(LSTM(128, input_shape=(L, n_features_in), 
                    dropout=0.2, 
                    recurrent_dropout=0.2,
                    activation = 'tanh'))
+    model.add(Dense(n_features_out//2, activation='tanh'))
     model.add(Dense(n_features_out, activation='relu'))
     
     if weights_file is not None:
