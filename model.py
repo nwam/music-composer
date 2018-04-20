@@ -38,7 +38,7 @@ def create_model(model_name, dataset_name='banjo', weights_file=None):
                    dropout=0.2, 
                    recurrent_dropout=0.2,
                    activation = 'tanh'))
-    model.add(Dense(n_features_out, activation='softmax'))
+    model.add(Dense(n_features_out, activation='relu'))
     
     if weights_file is not None:
         print('Loading weights')
@@ -47,7 +47,7 @@ def create_model(model_name, dataset_name='banjo', weights_file=None):
     print('Compiling model')
     optimizer = optimizers.Adam(lr=0.001)
     model.compile(optimizer=optimizer,
-                  loss='categorical_crossentropy')
+                  loss='mse')
 
     print('Init callbacks')
     #tensorboard = TensorBoard(log_dir="logs/{}".format(time.time()))

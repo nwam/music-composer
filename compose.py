@@ -7,10 +7,15 @@ import pdb
 if __name__ == '__main__':
 
     if len(sys.argv) < 3:
-        print('Usage: python {} <model_name> <song_size>'.format(sys.argv[0]))
+        print('Usage: python {} <model_name> <song_size> [<thresh>]'.format(sys.argv[0]))
         exit()
     model_name = sys.argv[1]
     song_size = int(sys.argv[2])
+
+    thresh = 0.5
+    if len(sys.argv) > 3:
+        thresh = float(sys.argv[3])
+        
 
     try:
         model = load_model(model_name)
@@ -35,7 +40,7 @@ if __name__ == '__main__':
     for i in range(song_size):
         yp = model.predict(x)
 
-        r = np.random.normal(0.5, 0.05, yp.shape)
+        r = np.random.normal(thresh, 0.05, yp.shape)
         y = (yp>r).astype(int)
 
         song[i] = y
